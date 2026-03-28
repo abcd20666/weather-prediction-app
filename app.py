@@ -3,7 +3,7 @@ import pickle
 import numpy as np
 
 # Load model
-model = pickle.load(open("../model/weather_model.pkl", "rb"))
+model = pickle.load(open("weather_model.pkl", "rb"))
 
 st.title("🌦️ Weather Prediction App")
 
