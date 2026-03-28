@@ -4,26 +4,25 @@ import numpy as np
 import pandas as pd
 
 # -------------------------------
-# PAGE CONFIG (Dark Mode Style)
+# PAGE CONFIG
 # -------------------------------
-st.set_page_config(page_title="Weather App", page_icon="🌦️", layout="wide")
+st.set_page_config(page_title="Weather App", page_icon="🌦️")
 
-# Custom CSS for dark theme
+# Custom CSS (Dark + Button Text Black)
 st.markdown("""
 <style>
-body {
-    background-color: #0e1117;
-}
 .stApp {
     background-color: #0e1117;
     color: white;
 }
-.card {
-    padding: 20px;
-    border-radius: 15px;
-    background-color: #1c1f26;
-    text-align: center;
-    font-size: 20px;
+
+/* Button text black */
+div.stButton > button {
+    color: black !important;
+    background-color: #4CAF50;
+    border-radius: 10px;
+    height: 3em;
+    width: 100%;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -41,71 +40,57 @@ except:
 try:
     df = pd.read_csv("seattle-weather.csv")
 except:
-    st.warning("Dataset not found! Charts disabled.")
     df = None
+    st.warning("Dataset not found. Charts disabled.")
 
 # -------------------------------
-# HEADER
+# TITLE
 # -------------------------------
-st.title("🌦️ Weather Prediction Dashboard")
+st.title("🌦️ Weather Prediction App")
 
 # -------------------------------
-# INPUT SECTION
+# INPUTS
 # -------------------------------
-col1, col2 = st.columns(2)
-
-with col1:
-    precipitation = st.slider("Precipitation", 0.0, 50.0, 0.0)
-    temp_max = st.slider("Max Temperature", -10.0, 50.0, 25.0)
-
-with col2:
-    temp_min = st.slider("Min Temperature", -10.0, 40.0, 15.0)
-    wind = st.slider("Wind Speed", 0.0, 20.0, 5.0)
+precipitation = st.slider("Precipitation", 0.0, 50.0, 0.0)
+temp_max = st.slider("Max Temperature", -10.0, 50.0, 25.0)
+temp_min = st.slider("Min Temperature", -10.0, 40.0, 15.0)
+wind = st.slider("Wind Speed", 0.0, 20.0, 5.0)
 
 # -------------------------------
 # PREDICTION
 # -------------------------------
-if st.button("🔍 Predict Weather"):
+if st.button("Predict Weather"):
 
     features = np.array([[precipitation, temp_max, temp_min, wind]])
     prediction = model.predict(features)[0]
 
-    st.subheader("Prediction Result")
+    st.subheader("Prediction")
 
-    # Card UI
     if prediction == "rain":
-        st.markdown('<div class="card">🌧️ Rainy Weather<br>Carry umbrella ☔</div>', unsafe_allow_html=True)
+        st.write("🌧️ Rainy Weather")
     elif prediction == "sun":
-        st.markdown('<div class="card">☀️ Sunny Weather<br>Enjoy your day 😎</div>', unsafe_allow_html=True)
+        st.write("☀️ Sunny Weather")
     elif prediction == "fog":
-        st.markdown('<div class="card">🌫️ Foggy Weather<br>Drive carefully 🚗</div>', unsafe_allow_html=True)
+        st.write("🌫️ Foggy Weather")
     elif prediction == "drizzle":
-        st.markdown('<div class="card">🌦️ Drizzle<br>Light rain expected</div>', unsafe_allow_html=True)
+        st.write("🌦️ Drizzle")
     else:
-        st.markdown(f'<div class="card">🌍 {prediction}</div>', unsafe_allow_html=True)
+        st.write(prediction)
 
     # -------------------------------
-    # CHARTS (Only if dataset exists)
+    # SIMPLE CHARTS (3 ONLY)
     # -------------------------------
     if df is not None:
-        st.subheader("📊 Weather Insights")
+        st.subheader("📊 Charts")
 
-        col1, col2 = st.columns(2)
+        # 1. Weather Count
+        st.write("Weather Distribution")
+        st.bar_chart(df["weather"].value_counts())
 
-        # Chart 1: Weather Distribution
-        with col1:
-            st.write("Weather Distribution")
-            st.bar_chart(df["weather"].value_counts())
+        # 2. Temperature Chart
+        st.write("Temperature Trend")
+        st.line_chart(df[["temp_max", "temp_min"]])
 
-        # Chart 2: Temperature Trend
-        with col2:
-            st.write("Temperature Trend")
-            st.line_chart(df[["temp_max", "temp_min"]])
-
-        # Chart 3: Precipitation
-        st.write("Precipitation Over Time")
+        # 3. Precipitation Chart
+        st.write("Precipitation Trend")
         st.area_chart(df["precipitation"])
-
-        # Chart 4: Wind Speed
-        st.write("Wind Speed Trend")
-        st.line_chart(df["wind"])
