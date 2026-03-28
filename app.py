@@ -2,75 +2,110 @@ import streamlit as st
 import pickle
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
-# Load model
+# -------------------------------
+# PAGE CONFIG (Dark Mode Style)
+# -------------------------------
+st.set_page_config(page_title="Weather App", page_icon="🌦️", layout="wide")
+
+# Custom CSS for dark theme
+st.markdown("""
+<style>
+body {
+    background-color: #0e1117;
+}
+.stApp {
+    background-color: #0e1117;
+    color: white;
+}
+.card {
+    padding: 20px;
+    border-radius: 15px;
+    background-color: #1c1f26;
+    text-align: center;
+    font-size: 20px;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# -------------------------------
+# LOAD MODEL
+# -------------------------------
 try:
     model = pickle.load(open("weather_model.pkl", "rb"))
 except:
     st.error("Model file not found!")
     st.stop()
 
-# Load dataset for graphs
-df = pd.read_csv("seattle-weather.csv")
+# Load dataset
+try:
+    df = pd.read_csv("seattle-weather.csv")
+except:
+    st.warning("Dataset not found! Charts disabled.")
+    df = None
 
-st.title("🌦️ Weather Prediction App")
+# -------------------------------
+# HEADER
+# -------------------------------
+st.title("🌦️ Weather Prediction Dashboard")
 
 # -------------------------------
 # INPUT SECTION
 # -------------------------------
-st.subheader("Enter Weather Details")
+col1, col2 = st.columns(2)
 
-precipitation = st.slider("Precipitation", 0.0, 50.0, 0.0)
-temp_max = st.slider("Max Temperature", -10.0, 50.0, 25.0)
-temp_min = st.slider("Min Temperature", -10.0, 40.0, 15.0)
-wind = st.slider("Wind Speed", 0.0, 20.0, 5.0)
+with col1:
+    precipitation = st.slider("Precipitation", 0.0, 50.0, 0.0)
+    temp_max = st.slider("Max Temperature", -10.0, 50.0, 25.0)
+
+with col2:
+    temp_min = st.slider("Min Temperature", -10.0, 40.0, 15.0)
+    wind = st.slider("Wind Speed", 0.0, 20.0, 5.0)
 
 # -------------------------------
 # PREDICTION
 # -------------------------------
-if st.button("Predict Weather"):
+if st.button("🔍 Predict Weather"):
+
     features = np.array([[precipitation, temp_max, temp_min, wind]])
     prediction = model.predict(features)[0]
 
     st.subheader("Prediction Result")
 
+    # Card UI
     if prediction == "rain":
-        st.write("🌧️ Rainy Weather")
+        st.markdown('<div class="card">🌧️ Rainy Weather<br>Carry umbrella ☔</div>', unsafe_allow_html=True)
     elif prediction == "sun":
-        st.write("☀️ Sunny Weather")
+        st.markdown('<div class="card">☀️ Sunny Weather<br>Enjoy your day 😎</div>', unsafe_allow_html=True)
     elif prediction == "fog":
-        st.write("🌫️ Foggy Weather")
+        st.markdown('<div class="card">🌫️ Foggy Weather<br>Drive carefully 🚗</div>', unsafe_allow_html=True)
     elif prediction == "drizzle":
-        st.write("🌦️ Drizzle")
+        st.markdown('<div class="card">🌦️ Drizzle<br>Light rain expected</div>', unsafe_allow_html=True)
     else:
-        st.write(prediction)
+        st.markdown(f'<div class="card">🌍 {prediction}</div>', unsafe_allow_html=True)
 
-# -------------------------------
-# GRAPHS SECTION
-# -------------------------------
-st.subheader("📊 Data Visualization")
+    # -------------------------------
+    # CHARTS (Only if dataset exists)
+    # -------------------------------
+    if df is not None:
+        st.subheader("📊 Weather Insights")
 
-# 1. Weather Count Chart
-st.write("Weather Distribution")
-weather_counts = df['weather'].value_counts()
+        col1, col2 = st.columns(2)
 
-fig1 = plt.figure()
-weather_counts.plot(kind='bar')
-st.pyplot(fig1)
+        # Chart 1: Weather Distribution
+        with col1:
+            st.write("Weather Distribution")
+            st.bar_chart(df["weather"].value_counts())
 
-# 2. Temperature vs Weather
-st.write("Max Temperature vs Weather")
+        # Chart 2: Temperature Trend
+        with col2:
+            st.write("Temperature Trend")
+            st.line_chart(df[["temp_max", "temp_min"]])
 
-fig2 = plt.figure()
-for w in df['weather'].unique():
-    subset = df[df['weather'] == w]
-    plt.scatter(subset['temp_max'], [w]*len(subset))
-st.pyplot(fig2)
+        # Chart 3: Precipitation
+        st.write("Precipitation Over Time")
+        st.area_chart(df["precipitation"])
 
-# 3. Precipitation Distribution
-st.write("Precipitation Distribution")
-
-fig3 = plt.figure()
-df['precipitation'].plot(kind='hist')
-st.pyplot(fig3)
+        # Chart 4: Wind Speed
+        st.write("Wind Speed Trend")
+        st.line_chart(df["wind"])
