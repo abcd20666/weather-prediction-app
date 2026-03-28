@@ -8,7 +8,9 @@ import pandas as pd
 # -------------------------------
 st.set_page_config(page_title="Weather App", page_icon="🌦️")
 
-# Custom CSS (Dark + Button Text Black)
+# -------------------------------
+# CUSTOM CSS (Dark + Button Style)
+# -------------------------------
 st.markdown("""
 <style>
 .stApp {
@@ -16,7 +18,7 @@ st.markdown("""
     color: white;
 }
 
-/* Button text black */
+/* Button styling */
 div.stButton > button {
     color: black !important;
     background-color: #4CAF50;
@@ -36,7 +38,9 @@ except:
     st.error("Model file not found!")
     st.stop()
 
-# Load dataset
+# -------------------------------
+# LOAD DATASET
+# -------------------------------
 try:
     df = pd.read_csv("seattle-weather.csv")
 except:
@@ -49,8 +53,10 @@ except:
 st.title("🌦️ Weather Prediction App")
 
 # -------------------------------
-# INPUTS
+# INPUT SECTION
 # -------------------------------
+st.subheader("Enter Weather Details")
+
 precipitation = st.slider("Precipitation", 0.0, 50.0, 0.0)
 temp_max = st.slider("Max Temperature", -10.0, 50.0, 25.0)
 temp_min = st.slider("Min Temperature", -10.0, 40.0, 15.0)
@@ -64,7 +70,7 @@ if st.button("Predict Weather"):
     features = np.array([[precipitation, temp_max, temp_min, wind]])
     prediction = model.predict(features)[0]
 
-    st.subheader("Prediction")
+    st.subheader("Prediction Result")
 
     if prediction == "rain":
         st.write("🌧️ Rainy Weather")
@@ -78,19 +84,22 @@ if st.button("Predict Weather"):
         st.write(prediction)
 
     # -------------------------------
-    # SIMPLE CHARTS (3 ONLY)
+    # CLEAN SIMPLE CHARTS
     # -------------------------------
     if df is not None:
         st.subheader("📊 Charts")
 
-        # 1. Weather Count
+        # Use only first 50 rows (clean display)
+        df_small = df.head(50)
+
+        # 1. Weather Distribution
         st.write("Weather Distribution")
         st.bar_chart(df["weather"].value_counts())
 
-        # 2. Temperature Chart
-        st.write("Temperature Trend")
-        st.line_chart(df[["temp_max", "temp_min"]])
+        # 2. Temperature Trend
+        st.write("Temperature Trend (First 50 Days)")
+        st.line_chart(df_small[["temp_max", "temp_min"]])
 
-        # 3. Precipitation Chart
-        st.write("Precipitation Trend")
-        st.area_chart(df["precipitation"])
+        # 3. Precipitation Trend
+        st.write("Precipitation Trend (First 50 Days)")
+        st.line_chart(df_small["precipitation"])
